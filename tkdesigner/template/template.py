@@ -8,6 +8,7 @@ from pathlib import Path
 # from tkinter import *
 # Explicit imports to satisfy Flake8
 from tkinter import Tk, Canvas, Entry, Text, Button, PhotoImage
+from customtkinter import *
 
 
 OUTPUT_PATH = Path(__file__).parent
@@ -18,7 +19,7 @@ def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
 
 
-window = Tk()
+window = CTk()
 
 window.geometry("{{ window.width }}x{{ window.height }}")
 window.configure(bg = "{{ window.bg_color }}")

@@ -1,9 +1,19 @@
-from .vector_elements import Vector, Rectangle
+from tkdesigner.figma.vector_elements import Vector, Rectangle, UnknownElement
 
 TEXT_INPUT_ELEMENT_TYPES = {
     "TextArea": "Text",
     "TextBox": "Entry"
 }
+
+
+class Progress(UnknownElement):
+    def __init__(self, node, frame):
+        super().__init__(node, frame)
+
+
+class Combobox(UnknownElement):
+    def __init__(self, node, frame):
+        super().__init__(node, frame)
 
 
 class Button(Rectangle):
@@ -144,7 +154,7 @@ class TextEntry(Vector):
         self.entry_x, self.entry_y = self.position(frame)
         self.entry_x += corner_radius
 
-        self.entry_type = TEXT_INPUT_ELEMENT_TYPES.get(self.get("name"))
+        self.entry_type = TEXT_INPUT_ELEMENT_TYPES.get(self.get("name").split('_')[0])
 
     def to_code(self):
         return f"""

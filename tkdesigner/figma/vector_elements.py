@@ -10,6 +10,7 @@ class Vector(Node):
         """
         try:
             color = self.node["fills"][0]["color"]
+            print(f"vector color: {color}")
             r, g, b, *_ = [int(color.get(i, 0) * 255) for i in "rgba"]
             return f"#{r:02X}{g:02X}{b:02X}"
         except Exception:

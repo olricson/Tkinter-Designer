@@ -3,15 +3,19 @@ from ..utils import download_image
 
 from .node import Node
 from .vector_elements import Line, Rectangle, UnknownElement
-from .custom_elements import Button, Text, Image, TextEntry
+
+from tkdesigner.figma.elements.tk_elements import *
+from tkdesigner.figma.elements.tk_elements import TextEntry as tkentry
 
 from jinja2 import Template
 from pathlib import Path
 
 
 class Frame(Node):
-    def __init__(self, node, figma_file, output_path):
+    def __init__(self, node, figma_file, output_path, elements_pack="tk"):
         super().__init__(node)
+
+        self.elements_pack = elements_pack
 
         self.width, self.height = self.size()
         self.bg_color = self.color()
@@ -32,8 +36,14 @@ class Frame(Node):
             if Node(child).visible
         ]
 
-    def create_element(self, element):
-        element_name = element["name"].strip().lower()
+    def create_element(self, element: Node):
+        is_ctk = False
+        if self.elements_pack == 'ctk':
+            is_ctk = True
+            from tkdesigner.figma.elements.ctk_elements import Button, Text, Image, TextEntry, Progress, Combobox
+
+        element_name = element["name"].strip().lower().split('_')[0]
+        alias = element["name"].strip().lower().split('_')[1] if '_' in element['name'] else None
         element_type = element["type"].strip().lower()
 
         print(
@@ -43,17 +53,32 @@ class Frame(Node):
 
         if element_name == "button":
             self.counter[Button] = self.counter.get(Button, 0) + 1
-
+            ch = element.get('children')
             item_id = element["id"]
-            image_url = self.figma_file.get_image(item_id)
-            image_path = (
-                self.assets_path / f"button_{self.counter[Button]}.png")
-            download_image(image_url, image_path)
+            text = [item for item in ch if item['type'] == 'TEXT'][0]
+            element = [item for item in ch if item['type'] == 'RECTANGLE'][0]
+            hover = [item for item in ch if item['name'] == 'hover']
+            return Button(element, self, text=Text(text, self), hover=Rectangle(hover[0], self) if hover else None, id_=f"{alias or self.counter[Button]}")
 
-            image_path = image_path.relative_to(self.assets_path)
+        elif element_name == "progress" and is_ctk:
+            self.counter[Progress] = self.counter.get(Progress, 0) + 1
+            ch = element.get('children')
+            foreground = [item for item in ch if item['name'] == 'foreground'][0]
+            background = [item for item in ch if item['name'] == 'background'][0]
+            return Progress(background, self, progress=Rectangle(foreground, self), id_=f"{alias or self.counter[Progress]}")
 
-            return Button(
-                element, self, image_path, id_=f"{self.counter[Button]}")
+        elif element_name == "combobox" and is_ctk:
+            self.counter[Combobox] = self.counter.get(Combobox, 0) + 1
+            # ch = element.get('children')
+            # foreground = [item for item in ch if item['name'] == 'foreground'][0]
+            # background = [item for item in ch if item['name'] == 'background'][0]
+            hover = []
+            if element_type == "group":
+                ch = element.get('children')
+                element = [item for item in ch if item['name'].lower().strip() == 'combobox'][0]
+                hover = [item for item in ch if item['name'] == 'hover']
+            return Combobox(element, self, hover=Rectangle(hover[0], self) if hover else None, id_=f"{alias or self.counter[Combobox]}")
+
 
         elif element_name in ("textbox", "textarea"):
             self.counter[TextEntry] = self.counter.get(TextEntry, 0) + 1
@@ -66,8 +91,12 @@ class Frame(Node):
 
             image_path = image_path.relative_to(self.assets_path)
 
+            if element_name == "textarea":
+                return tkentry(
+                    element, self, image_path=image_path, id_=f"{alias or self.counter[TextEntry]}")
+
             return TextEntry(
-                element, self, image_path, id_=f"{self.counter[TextEntry]}")
+                element, self, image_path=image_path, id_=f"{alias or self.counter[TextEntry]}")
 
         elif element_name == "image":
             self.counter[Image] = self.counter.get(Image, 0) + 1

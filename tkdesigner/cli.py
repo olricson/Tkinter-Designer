@@ -36,6 +36,16 @@ def main():
             "If this flag is passed in, the output directory given "
             "will be overwritten if it exists."))
 
+    parser.add_argument("-t", "--template",  type=str, default="default",
+        help=(
+            "If this flag is passed in, the output directory given "
+            "will be overwritten if it exists."))
+
+    parser.add_argument("-p", "--pack",  type=str, default="default",
+        help=(
+            "If this flag is passed in, the output directory given "
+            "will be overwritten if it exists."))
+
     parser.add_argument(
         "file_url", type=str, help="File url of the Figma design.")
     parser.add_argument("token", type=str, help="Figma token.")
@@ -67,7 +77,7 @@ def main():
                 print("Aborting!")
                 exit(-1)
 
-    designer = Designer(token, file_key, output_path)
+    designer = Designer(token, file_key, output_path, template_name=args.template.strip(), elements_pack=args.pack.strip())
     designer.design()
     print(f"\nProject successfully generated at {output_path}.\n")
 
